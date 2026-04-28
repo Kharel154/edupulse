@@ -3,7 +3,8 @@
 import aiosqlite
 import os
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "edupulse.db")
+DATA_DIR = "/data" if os.path.exists("/data") else os.path.dirname(__file__)
+DB_PATH = os.path.join(DATA_DIR, "edupulse.db")
 
 async def init_db():
     """Crée la table si elle n'existe pas."""
