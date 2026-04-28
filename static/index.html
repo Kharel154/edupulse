@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>EduPulse — Baromètre Étudiant</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header class="header">
+    <div class="header-content">
+        <div class="logo">📊 EduPulse</div>
+        <p class="tagline">Baromètre de satisfaction étudiant</p>
+    </div>
+</header>
+
+<main class="container">
+
+    <!-- ══════ ONGLETS ══════ -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('formulaire', event)">📝 Formulaire</button>
+        <button class="tab-btn"        onclick="showTab('analyse', event)">📊 Analyse</button>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         SECTION FORMULAIRE
+    ══════════════════════════════════════ -->
+    <section id="tab-formulaire" class="tab-content active">
+        <div class="card">
+            <h2>Évaluer un cours</h2>
+            <p class="subtitle">Vos réponses sont anonymes et contribuent à améliorer la qualité de l'enseignement.</p>
+
+            <div id="form-alert" class="alert hidden"></div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="filiere">Filière *</label>
+                    <select id="filiere" required>
+                        <option value="">— Sélectionnez —</option>
+                        <option>Informatique</option>
+                        <option>Mathématiques</option>
+                        <option>Physique</option>
+                        <option>Chimie</option>
+                        <option>Biologie</option>
+                        <option>Économie</option>
+                        <option>Lettres</option>
+                        <option>Autre</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="niveau">Niveau *</label>
+                    <select id="niveau" required>
+                        <option value="">— Sélectionnez —</option>
+                        <option>Licence 1</option>
+                        <option>Licence 2</option>
+                        <option>Licence 3</option>
+                        <option>Master 1</option>
+                        <option>Master 2</option>
+                    </select>
+                </div>
+                <div class="form-group full-width">
+                    <label for="matiere">Matière évaluée *</label>
+                    <input type="text" id="matiere" placeholder="Ex : Algorithmique, Analyse, POO…" maxlength="100" required />
+                </div>
+            </div>
+
+            <div class="scales-section">
+                <h3>Évaluez les critères suivants <span class="scale-hint">(1 = Très faible &nbsp;|&nbsp; 5 = Très élevé)</span></h3>
+                <div class="scale-group">
+                    <label>🧩 Difficulté du cours</label>
+                    <div class="stars" id="stars-difficulte" data-field="difficulte"></div>
+                    <span class="scale-label" id="label-difficulte">—</span>
+                </div>
+                <div class="scale-group">
+                    <label>💡 Intérêt du cours</label>
+                    <div class="stars" id="stars-interet" data-field="interet"></div>
+                    <span class="scale-label" id="label-interet">—</span>
+                </div>
+                <div class="scale-group">
+                    <label>⏱️ Charge de travail</label>
+                    <div class="stars" id="stars-charge" data-field="charge"></div>
+                    <span class="scale-label" id="label-charge">—</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="commentaire">Commentaire (optionnel)</label>
+                <textarea id="commentaire" rows="3" maxlength="500"
+                    placeholder="Partagez votre expérience sur ce cours…"></textarea>
+                <span class="char-count"><span id="char-num">0</span>/500</span>
+            </div>
+
+            <button class="btn-submit" id="btn-submit" onclick="submitForm()">
+                Envoyer mon évaluation 🚀
+            </button>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         SECTION ANALYSE
+    ══════════════════════════════════════ -->
+    <section id="tab-analyse" class="tab-content">
+
+        <div class="stats-header">
+            <h2>Tableau de bord analytique</h2>
+            <button class="btn-refresh" onclick="loadStats()">🔄 Actualiser</button>
+        </div>
+
+        <!-- ── RANGÉE 1 : KPIs ── -->
+        <div class="kpi-grid">
+            <div class="kpi-card kpi-blue">
+                <div class="kpi-icon">📋</div>
+                <div class="kpi-value" id="kpi-total">—</div>
+                <div class="kpi-label">Réponses collectées</div>
+            </div>
+            <div class="kpi-card kpi-purple">
+                <div class="kpi-icon">🧩</div>
+                <div class="kpi-value" id="kpi-diff">—</div>
+                <div class="kpi-label">Difficulté moyenne /5</div>
+            </div>
+            <div class="kpi-card kpi-cyan">
+                <div class="kpi-icon">💡</div>
+                <div class="kpi-value" id="kpi-int">—</div>
+                <div class="kpi-label">Intérêt moyen /5</div>
+            </div>
+            <div class="kpi-card kpi-amber">
+                <div class="kpi-icon">⏱️</div>
+                <div class="kpi-value" id="kpi-charge">—</div>
+                <div class="kpi-label">Charge moyenne /5</div>
+            </div>
+        </div>
+
+        <!-- ── RANGÉE 2 : Graphiques de base (2 colonnes) ── -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>📊 Moyennes par critère</h3>
+                <p class="chart-desc">Vue d'ensemble des 3 critères évalués</p>
+                <canvas id="chartBarres"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>🎓 Répartition par filière</h3>
+                <p class="chart-desc">Distribution des répondants par filière</p>
+                <canvas id="chartFiliere"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>📈 Répartition par niveau</h3>
+                <p class="chart-desc">Nombre de réponses par niveau académique</p>
+                <canvas id="chartNiveau"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>📋 Statistiques descriptives</h3>
+                <p class="chart-desc">Moyenne, médiane, écart-type, min, max</p>
+                <div id="stats-table"></div>
+            </div>
+        </div>
+
+        <!-- ── RANGÉE 4 : Top matières + Classement filières (pleine largeur) ── -->
+        <div class="charts-grid section-gap">
+            <div class="chart-card full-chart">
+                <div class="dual-panel">
+
+                    <!-- Panneau gauche : Top 3 matières -->
+                    <div class="dual-panel-col">
+                        <h3>🏆 Top 3 matières les plus difficiles</h3>
+                        <p class="chart-desc">Classées par difficulté moyenne décroissante — avec filière</p>
+                        <div id="top-matieres"></div>
+                    </div>
+
+                    <div class="dual-panel-divider"></div>
+
+                    <!-- Panneau droit : Classement filières -->
+                    <div class="dual-panel-col">
+                        <h3>🎓 Filières par charge de matières difficiles</h3>
+                        <p class="chart-desc">Nombre de matières avec difficulté moyenne ≥ 3.5/5</p>
+                        <div id="top-filieres-difficiles"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ── RANGÉE 5 : Derniers commentaires ── -->
+        <div class="charts-grid section-gap">
+            <div class="chart-card full-chart">
+                <h3>💬 Derniers commentaires</h3>
+                <p class="chart-desc">5 commentaires les plus récents</p>
+                <div id="commentaires-list"></div>
+            </div>
+        </div>
+
+    </section>
+
+</main>
+
+<footer class="footer">
+    <p>EduPulse &copy; 2025 — TP INF232 EC2 &nbsp;|&nbsp; Développé avec FastAPI & Vanilla JS</p>
+</footer>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
