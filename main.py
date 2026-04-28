@@ -6,9 +6,9 @@ from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
 import aiosqlite
 import statistics
-import asyncio
-import httpx
 import os
+import httpx
+import asyncio
 
 from database import init_db, DB_PATH
 from models import ReponseCreate
@@ -34,6 +34,22 @@ async def keep_alive():
             print(f"⚠️  Keep-alive échoué : {e}")
         await asyncio.sleep(300)  # toutes les 5 minutes
 
+RENDER_URL = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:8000")
+
+async def keep_alive():
+    await asyncio.sleep(60)
+    while True:
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(f"{RENDER_URL}/health", timeout=10)
+            print(f"✅ Keep-alive — {resp.status_code}")
+        except Exception as e:
+            print(f"⚠️ Keep-alive échoué : {e}")
+        await asyncio.sleep(300)
+
+@app.get("/health", include_in_schema=False)
+async def health():
+    return {"status": "ok"}
 
 # ── Lifespan ────────────────────────────────────────────────────────────────────
 
